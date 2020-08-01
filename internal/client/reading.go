@@ -1,6 +1,9 @@
 package client
 
-import "github.com/spin-org/thermomatic/internal/common"
+import (
+	"encoding/binary"
+	"math"
+)
 
 // Reading is the set of device readings.
 type Reading struct {
@@ -27,5 +30,44 @@ type Reading struct {
 // Decode does NOT allocate under any condition. Additionally, it panics if b
 // isn't at least 40 bytes long.
 func (r *Reading) Decode(b []byte) (ok bool) {
-	panic(common.ErrNotImplemented)
+	_ = b[39] // compiler bound check hint
+	temperature := math.Float64frombits(binary.BigEndian.Uint64(b[0:]))
+	if isInRange(temperature, -300, 300) {
+		r.Temperature = temperature
+	} else {
+		ok = false
+	}
+
+	altitude := math.Float64frombits(binary.BigEndian.Uint64(b[8:]))
+	if isInRange(altitude, -20000, 20000) {
+		r.Altitude = altitude
+	} else {
+		ok = false
+	}
+
+	latitude := math.Float64frombits(binary.BigEndian.Uint64(b[16:]))
+	if isInRange(latitude, -90, 90) {
+		r.Latitude = latitude
+	} else {
+		ok = false
+	}
+	longitude := math.Float64frombits(binary.BigEndian.Uint64(b[24:]))
+	if isInRange(longitude, -180, 180) {
+		r.Longitude = longitude
+	} else {
+		ok = false
+	}
+
+	batteryLevel := math.Float64frombits(binary.BigEndian.Uint64(b[32:]))
+	if isInRange(batteryLevel, 0, 100) {
+		r.BatteryLevel = batteryLevel
+	} else {
+		ok = false
+	}
+
+	return ok
+}
+
+func isInRange(value, min, max float64) bool {
+	return value >= min && value <= max
 }

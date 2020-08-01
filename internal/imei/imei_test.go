@@ -1,6 +1,7 @@
 package imei
 
 import (
+	"github.com/spin-org/thermomatic/internal/common"
 	"runtime"
 	"testing"
 )
@@ -35,7 +36,7 @@ func TestDecodePanicAtLeast15byteslong(t *testing.T) {
 	//it panics if b isn't at least 15 bytes long.
 	onlyTwoBytes := []byte{1, 2}
 
-	shouldPanic(t, func() {
+	common.ShouldPanic(t, func() {
 		_, _ = Decode(onlyTwoBytes)
 	})
 }
@@ -60,10 +61,4 @@ func BenchmarkDecode(b *testing.B) {
 		_, _ = Decode([]byte{4, 9, 0, 1, 5, 4, 2, 0, 3, 2, 3, 7, 5, 1, 8})
 	}
 	b.StopTimer()
-}
-
-func shouldPanic(t *testing.T, f func()) {
-	defer func() { recover() }()
-	f()
-	t.Errorf("should have panicked")
 }
