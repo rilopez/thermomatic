@@ -23,6 +23,11 @@ type Reading struct {
 	BatteryLevel float64
 }
 
+const (
+	temperatureMin = -300
+	temperatureMax = 300
+)
+
 // Decode decodes the reading message payload in the given b into r.
 //
 // If any of the fields are outside their valid min/max ranges ok will be unset.
@@ -32,7 +37,8 @@ type Reading struct {
 func (r *Reading) Decode(b []byte) (ok bool) {
 	_ = b[39] // compiler bound check hint
 	temperature := math.Float64frombits(binary.BigEndian.Uint64(b[0:]))
-	if isInRange(temperature, -300, 300) {
+
+	if isInRange(temperature, temperatureMin, temperatureMax) {
 		r.Temperature = temperature
 	} else {
 		ok = false
@@ -70,4 +76,29 @@ func (r *Reading) Decode(b []byte) (ok bool) {
 
 func isInRange(value, min, max float64) bool {
 	return value >= min && value <= max
+}
+
+
+
+func CreateRandReading() [40]byte {
+	return CreatePayload(
+		randFloat(-300, 300),
+		randFloat()
+	)
+
+}
+
+func randFloat(min, max float64) float64 {
+	return min + rand.Float64()*(max-min)
+}
+
+// CreatePayload returns a input reading values as byte array
+func CreatePayload(expectedTemperature float64, expectedAltitude float64, expectedLatitude float64, expectedLongitude float64, expectedBatteryLevel float64) [40]byte {
+	var payload [40]byte
+	binary.BigEndian.PutUint64(payload[0:], math.Float64bits(expectedTemperature))
+	binary.BigEndian.PutUint64(payload[8:], math.Float64bits(expectedAltitude))
+	binary.BigEndian.PutUint64(payload[16:], math.Float64bits(expectedLatitude))
+	binary.BigEndian.PutUint64(payload[24:], math.Float64bits(expectedLongitude))
+	binary.BigEndian.PutUint64(payload[32:], math.Float64bits(expectedBatteryLevel))
+	return payload
 }

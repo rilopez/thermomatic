@@ -129,6 +129,7 @@ func clientCommandHandler(clientServerAddress *string, clientImei *string) {
 	//TODO add a flag for amount of random reading messages
 	totalReadings := 5
 	for i := 0; i < totalReadings; i++ {
+		common.CreatePayload()
 		log.Printf("DEBUG: [%d] sending dummy msg %v to server", i, helloBytes)
 		n, err := conn.Write(helloBytes)
 		log.Printf("DEBUG: [%d] %d bytes sent", i, n)
