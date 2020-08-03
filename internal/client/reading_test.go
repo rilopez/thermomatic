@@ -1,9 +1,10 @@
 package client
 
 import (
-	"github.com/spin-org/thermomatic/internal/common"
 	"runtime"
 	"testing"
+
+	"github.com/spin-org/thermomatic/internal/common"
 )
 
 func TestDecode(t *testing.T) {
@@ -21,7 +22,7 @@ func TestDecode(t *testing.T) {
 		expectedBatteryLevel)
 
 	reading := Reading{}
-	reading.Decode(payload)
+	reading.Decode(payload[:])
 
 	if reading.Temperature != expectedTemperature {
 		t.Errorf("expected Temperature: %f got %f", expectedTemperature, reading.Temperature)
@@ -63,7 +64,7 @@ func TestDecodeAllocations(t *testing.T) {
 	runtime.GC()
 	runtime.ReadMemStats(&start)
 
-	reading.Decode(payload)
+	reading.Decode(payload[:])
 
 	runtime.ReadMemStats(&end)
 	alloc := end.TotalAlloc - start.TotalAlloc
@@ -71,3 +72,5 @@ func TestDecodeAllocations(t *testing.T) {
 		t.Errorf("Decode should NOT allocate under any condition, it allocated %d bytes", alloc)
 	}
 }
+
+//TODO create benchmark for reading.decode #12
