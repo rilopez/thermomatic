@@ -59,7 +59,7 @@ func (c *Client) receiveLoginMessage() error {
 		return err
 	}
 	c.IMEI = imei
-	c.register <- c
+	//c.register <- c
 	return nil
 }
 
