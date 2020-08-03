@@ -124,19 +124,17 @@ func clientCommandHandler(clientServerAddress *string, clientImei *string) {
 		log.Fatalf("Error trying to send IMEI %v", err)
 	}
 
-	//TODO insead of dummy hello send random readings
-	helloBytes := []byte{'h', 'e', 'l', 'o'}
 	//TODO add a flag for amount of random reading messages
 	totalReadings := 5
 	for i := 0; i < totalReadings; i++ {
-		common.CreatePayload()
-		log.Printf("DEBUG: [%d] sending dummy msg %v to server", i, helloBytes)
-		n, err := conn.Write(helloBytes)
+		randomReading := client.CreateRandReading()
+		log.Printf("DEBUG: [%d] sending reading %v to server", i, randomReading)
+		n, err := conn.Write(randomReading[:])
 		log.Printf("DEBUG: [%d] %d bytes sent", i, n)
 		if err != nil {
-			log.Fatalf("Error trying to send dummy msg %v", err)
+			log.Fatalf("Error trying to send reading %v", err)
 		}
-		//TODO sleep reading frequency, default 25ms
+		time.Sleep(25 * time.Millisecond)
 	}
 	//TODO add a flag to reading frequency , default 25ms
 	//TODO nice to have read from std in csv file of readings

@@ -1,0 +1,63 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "cwd": "${workspaceFolder}",
+    "tasks": [
+        {
+            "label": "run",
+            "command": "go",
+            "args": [
+                "run",
+                "${file}"
+            ],
+            "group": "build",
+            "type": "shell",
+            "problemMatcher": [
+                "$go"
+            ]
+        },
+        {
+            "label": "test",
+            "command": "go",
+            "args": [
+                "test",
+                "-v",
+                "./..."
+            ],
+            "group": "test",
+            "type": "shell"
+        },
+        {
+            "label": "server",
+            "command": "go",
+            "args": [
+                "run",
+                "./main.go",
+                "server"
+            ],
+            "group": "build",
+            "type": "shell",
+            "problemMatcher": [
+                "$go"
+            ]
+        },
+        {
+            "label": "client",
+            "command": "go",
+            "args": [
+                "run",
+                "./main.go",
+                "client",
+                "-server-address=localhost:1337" ,
+                "-imei=490154203237518",
+            ],
+            "group": "build",
+            "type": "shell",
+            "problemMatcher": [
+                "$go"
+            ]
+        }
+
+    ]
+}

@@ -3,6 +3,7 @@ package client
 
 import (
 	"encoding/hex"
+	"fmt"
 	"io"
 	"log"
 	"net"
@@ -14,11 +15,13 @@ import (
 
 // Client is used to handle a client connection
 type Client struct {
-	IMEI       uint64
-	Conn       net.Conn
-	outbound   chan<- common.Command
-	register   chan<- *Client
-	deregister chan<- *Client
+	IMEI             uint64
+	Conn             net.Conn
+	LastReading      *Reading
+	LastReadingEpoch int64
+	outbound         chan<- common.Command
+	register         chan<- *Client
+	deregister       chan<- *Client
 }
 
 // NewClient allocates a Client
@@ -29,6 +32,17 @@ func NewClient(conn net.Conn, o chan<- common.Command, r chan<- *Client, d chan<
 		register:   r,
 		deregister: d,
 	}
+}
+
+//TODO create a test for client string
+func (c *Client) String() string {
+	return fmt.Sprintf("%d,%d,%f,%f,%f,%f,%f",
+		c.LastReadingEpoch,
+		c.IMEI, c.LastReading.Temperature,
+		c.LastReading.Altitude,
+		c.LastReading.Latitude,
+		c.LastReading.Longitude,
+		c.LastReading.BatteryLevel)
 }
 
 //TODO code polish: split login and reading reads in separate testeable functions

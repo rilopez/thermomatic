@@ -1,7 +1,9 @@
 package server
 
 import (
+	"fmt"
 	"log"
+	"time"
 
 	"github.com/spin-org/thermomatic/internal/client"
 	"github.com/spin-org/thermomatic/internal/common"
@@ -38,13 +40,23 @@ func (c *Core) Run() {
 		case cmd := <-c.Commands:
 			switch cmd.ID {
 			case common.READING:
-				//TODO Gathers & Output `Reading` messages #4
-				log.Printf("Reading not implemented yet")
+				c.handleReading(cmd.Sender, cmd.Body)
 			default:
-				// Ka booomn?
+				log.Printf("Unknown Command %d", cmd.ID)
 			}
 		}
 	}
+}
+
+func (c *Core) handleReading(imei uint64, payload []byte) {
+	if device, exists := c.clients[imei]; exists {
+		reading := &client.Reading{}
+		reading.Decode(payload)
+		device.LastReadingEpoch = time.Now().UnixNano()
+		device.LastReading = reading
+		fmt.Println(device)
+	}
+
 }
 
 func (c *Core) register(device *client.Client) {
