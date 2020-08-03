@@ -68,6 +68,7 @@ func initCommandLineInterface(handleServerCmd func(uint), handleClientCmd func(c
 	}
 }
 
+//TODO move to core, rename to BootServer
 func serverCommandHandler(port uint) {
 	_ = initLog("server.log")
 	address := fmt.Sprintf(":%d", port)
