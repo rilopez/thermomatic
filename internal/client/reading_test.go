@@ -73,4 +73,16 @@ func TestDecodeAllocations(t *testing.T) {
 	}
 }
 
-//TODO create benchmark for reading.decode #12
+func BenchmarkDecode(b *testing.B) {
+	randomReading := CreateRandReading()
+	reading := Reading{}
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		if ok := reading.Decode(randomReading[:]); ok {
+			b.Fail()
+		}
+	}
+	b.StopTimer()
+}
