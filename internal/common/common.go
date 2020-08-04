@@ -32,7 +32,7 @@ func ImeiStringToBytes(imei *string) ([15]byte, error) {
 	return buf, nil
 }
 
-//TODO move to testing utility package
+// ShouldPanic assert that `f` panics during execution
 func ShouldPanic(t *testing.T, f func()) {
 	defer func() { recover() }()
 	f()
