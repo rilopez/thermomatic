@@ -29,19 +29,20 @@ func TestString(t *testing.T) {
 	if expectedRecord != actualRecord {
 		t.Errorf("expected %s got %s", expectedRecord, actualRecord)
 	}
+
 }
 
 func TestRead(t *testing.T) {
 	timeout := time.After(1 * time.Second)
 	outbound := make(chan common.Command)
-	deregister := make(chan *Client)
-	register := make(chan *Client)
+	logout := make(chan *Client)
+	login := make(chan *Client)
 	expectedIMEI := uint64(490154203237518)
 
 	device := &Client{
-		deregister: deregister,
-		register:   register,
-		outbound:   outbound,
+		logout:   logout,
+		login:    login,
+		outbound: outbound,
 	}
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
@@ -75,11 +76,11 @@ func TestRead(t *testing.T) {
 		if !bytes.Equal(cmd.Body, readingBytes[:]) {
 			t.Errorf("expected cmd.Body to be %v got %v", readingBytes, cmd.Body)
 		}
-	case loggedOutClient := <-deregister:
+	case loggedOutClient := <-logout:
 		if loggedOutClient != device {
 			t.Errorf("expecterd client device %v was not sent to login channel  got %v", *device, *loggedOutClient)
 		}
-	case clientToLogin := <-register:
+	case clientToLogin := <-login:
 		if clientToLogin != device {
 			t.Errorf("expecterd client device %v was not sent to login channel  got %v", *device, *clientToLogin)
 		}

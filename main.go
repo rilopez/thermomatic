@@ -94,8 +94,8 @@ func serverCommandHandler(port uint) {
 		c := client.NewClient(
 			conn,
 			core.Commands,
-			core.Registrations,
-			core.Deregistrations,
+			core.Logins,
+			core.Logouts,
 		)
 		go c.Read()
 	}

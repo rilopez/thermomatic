@@ -19,17 +19,17 @@ type Client struct {
 	LastReading      *Reading
 	LastReadingEpoch int64
 	outbound         chan<- common.Command
-	register         chan<- *Client
-	deregister       chan<- *Client
+	login            chan<- *Client
+	logout           chan<- *Client
 }
 
 // NewClient allocates a Client
-func NewClient(conn net.Conn, o chan<- common.Command, r chan<- *Client, d chan<- *Client) *Client {
+func NewClient(conn net.Conn, outbound chan<- common.Command, login chan<- *Client, logout chan<- *Client) *Client {
 	return &Client{
-		Conn:       conn,
-		outbound:   o,
-		register:   r,
-		deregister: d,
+		Conn:     conn,
+		outbound: outbound,
+		login:    login,
+		logout:   logout,
 	}
 }
 
@@ -58,7 +58,7 @@ func (c *Client) receiveLoginMessage() error {
 		return err
 	}
 	c.IMEI = imei
-	c.register <- c
+	c.login <- c
 	return nil
 }
 
@@ -66,17 +66,19 @@ func (c *Client) receiveReadings() error {
 	//TODO verify if this is better than using make to allocate this
 	var payload [40]byte
 	for {
-		_, err := c.Conn.Read(payload[:])
-		//TODO  verify bytes read should be 40, explain why?
+		n, err := c.Conn.Read(payload[:])
 		if err != nil {
 			if err == io.EOF {
 				// deregister client when Connection is closed
-				c.deregister <- c
+				c.logout <- c
 				return nil
 			}
 			return err
 		}
 
+		if n != 40 {
+			log.Printf("WARN read only %d bytes, expected 40 for reading payloads", n)
+		}
 		c.outbound <- common.Command{
 			ID:     common.READING,
 			Sender: c.IMEI,

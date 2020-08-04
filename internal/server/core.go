@@ -13,19 +13,17 @@ import (
 type Core struct {
 	clients  map[uint64]*client.Client
 	Commands chan common.Command
-	//TODO rename to logouts
-	Deregistrations chan *client.Client
-	//TODO rename to logins
-	Registrations chan *client.Client
+	Logouts  chan *client.Client
+	Logins   chan *client.Client
 }
 
 // NewCore allocates a Core struct
 func NewCore() *Core {
 	return &Core{
-		Registrations:   make(chan *client.Client),
-		Deregistrations: make(chan *client.Client),
-		clients:         make(map[uint64]*client.Client),
-		Commands:        make(chan common.Command),
+		Logins:   make(chan *client.Client),
+		Logouts:  make(chan *client.Client),
+		clients:  make(map[uint64]*client.Client),
+		Commands: make(chan common.Command),
 	}
 }
 
@@ -33,9 +31,9 @@ func NewCore() *Core {
 func (c *Core) Run() {
 	for {
 		select {
-		case client := <-c.Registrations:
+		case client := <-c.Logins:
 			c.register(client)
-		case client := <-c.Deregistrations:
+		case client := <-c.Logouts:
 			c.deregister(client)
 		case cmd := <-c.Commands:
 			switch cmd.ID {

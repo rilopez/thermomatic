@@ -88,7 +88,7 @@ func isInRange(value, min, max float64) bool {
 }
 
 func CreateRandReading() [40]byte {
-	return CreatePayload(
+	return NewPayload(
 		randFloat(temperatureMin, temperatureMax),
 		randFloat(altitudeMin, altitudMax),
 		randFloat(latitudeMin, latitudeMax),
@@ -102,9 +102,8 @@ func randFloat(min, max float64) float64 {
 	return min + rand.Float64()*(max-min)
 }
 
-// CreatePayload returns a input reading values as byte array
-func CreatePayload(expectedTemperature float64, expectedAltitude float64, expectedLatitude float64, expectedLongitude float64, expectedBatteryLevel float64) [40]byte {
-	//TODO we can optimize this if we pass a buf array instead of creating it here
+// NewPayload returns a input reading values as byte array
+func NewPayload(expectedTemperature float64, expectedAltitude float64, expectedLatitude float64, expectedLongitude float64, expectedBatteryLevel float64) [40]byte {
 	var payload [40]byte
 	binary.BigEndian.PutUint64(payload[0:], math.Float64bits(expectedTemperature))
 	binary.BigEndian.PutUint64(payload[8:], math.Float64bits(expectedAltitude))
