@@ -2,7 +2,6 @@
 package client
 
 import (
-	"encoding/hex"
 	"fmt"
 	"io"
 	"log"
@@ -59,7 +58,7 @@ func (c *Client) receiveLoginMessage() error {
 		return err
 	}
 	c.IMEI = imei
-	//c.register <- c
+	c.register <- c
 	return nil
 }
 
@@ -70,7 +69,6 @@ func (c *Client) receiveReadings() error {
 		_, err := c.Conn.Read(payload[:])
 		//TODO  verify bytes read should be 40, explain why?
 		if err != nil {
-			log.Printf("ERR reading payload bytes %v ", err)
 			if err == io.EOF {
 				// deregister client when Connection is closed
 				c.deregister <- c
@@ -78,8 +76,6 @@ func (c *Client) receiveReadings() error {
 			}
 			return err
 		}
-
-		log.Printf("DEBUG reading payload bytes\n%v", hex.Dump(payload[:]))
 
 		c.outbound <- common.Command{
 			ID:     common.READING,

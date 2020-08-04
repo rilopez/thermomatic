@@ -1,6 +1,7 @@
 package client
 
 import (
+	"bytes"
 	"net"
 	"testing"
 	"time"
@@ -30,50 +31,61 @@ func TestString(t *testing.T) {
 	}
 }
 
-func TestReceiveReadings(t *testing.T) {
-	t.Error(common.ErrNotImplemented)
-}
-
-func TestReceiveLoginMessage(t *testing.T) {
+func TestRead(t *testing.T) {
 	timeout := time.After(1 * time.Second)
-	logins := make(chan *Client)
-	device := &Client{
-		register: logins,
-	}
-
+	outbound := make(chan common.Command)
+	deregister := make(chan *Client)
+	register := make(chan *Client)
 	expectedIMEI := uint64(490154203237518)
+
+	device := &Client{
+		deregister: deregister,
+		register:   register,
+		outbound:   outbound,
+	}
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		t.Errorf("ERR while trying to start testing server, %v", err)
 	}
+
 	go func() {
 		defer ln.Close()
 		device.Conn, err = ln.Accept()
-		err = device.receiveLoginMessage()
+		err = device.Read()
 		if err != nil {
 			t.Errorf("ERR while receiving Login Message, %v", err)
+		}
+	}()
+
+	conn, err := net.Dial("tcp", ln.Addr().String())
+
+	expectedIMEIbytes := []byte{4, 9, 0, 1, 5, 4, 2, 0, 3, 2, 3, 7, 5, 1, 8}
+	conn.Write(expectedIMEIbytes)
+	readingBytes := CreateRandReading()
+	conn.Write(readingBytes[:])
+
+	conn.Close()
+	select {
+	case <-timeout:
+		t.Fatal("Timeout")
+	case cmd := <-outbound:
+		if cmd.Sender != device.IMEI {
+			t.Errorf("expected cmd.Sender to be %d got %d", device.IMEI, cmd.Sender)
+		}
+		if !bytes.Equal(cmd.Body, readingBytes[:]) {
+			t.Errorf("expected cmd.Body to be %v got %v", readingBytes, cmd.Body)
+		}
+	case loggedOutClient := <-deregister:
+		if loggedOutClient != device {
+			t.Errorf("expecterd client device %v was not sent to login channel  got %v", *device, *loggedOutClient)
+		}
+	case clientToLogin := <-register:
+		if clientToLogin != device {
+			t.Errorf("expecterd client device %v was not sent to login channel  got %v", *device, *clientToLogin)
 		}
 
 		if device.IMEI != expectedIMEI {
 			t.Errorf("Expected client.IMEI %d but got %d", expectedIMEI, device.IMEI)
 		}
-	}()
-
-	conn, err := net.Dial("tcp", ln.Addr().String())
-	expectedIMEIbytes := []byte{4, 9, 0, 1, 5, 4, 2, 0, 3, 2, 3, 7, 5, 1, 8}
-
-	conn.Write(expectedIMEIbytes[:])
-	select {
-	case <-timeout:
-		t.Fatal("Timeout")
-	case clientToLogin := <-logins:
-		if clientToLogin != device {
-			t.Errorf("device was not sent to login channel")
-		}
 	}
-
-}
-
-func TestRead(t *testing.T) {
-	t.Error(common.ErrNotImplemented)
 }
