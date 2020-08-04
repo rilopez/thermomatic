@@ -9,21 +9,21 @@ import (
 )
 
 // Randomatic implements a simple TCP client that sends `n` random readings after login
-func Randomatic(clientServerAddress *string, clientImei *string) {
-	baseClient(clientServerAddress, clientImei, 25*time.Millisecond, time.Nanosecond)
+func Randomatic(clientServerAddress *string, clientImei *string, numReadings *uint) {
+	baseClient(clientServerAddress, clientImei, 25*time.Millisecond, time.Nanosecond, numReadings)
 }
 
 // Slowmatic implements a client that will be send be disconected by the server  because it takes more than 2 seconds between msgs
-func Slowmatic(clientServerAddress *string, clientImei *string) {
-	baseClient(clientServerAddress, clientImei, 3*time.Second, time.Nanosecond)
+func Slowmatic(clientServerAddress *string, clientImei *string, numReadings *uint) {
+	baseClient(clientServerAddress, clientImei, 3*time.Second, time.Nanosecond, numReadings)
 }
 
 // TooSlowToPlayWithGrownups implements a client that is too slow to send the initial login message, so the server will disconnect the connection
-func TooSlowToPlayWithGrownups(clientServerAddress *string, clientImei *string) {
-	baseClient(clientServerAddress, clientImei, time.Second, 2*time.Second)
+func TooSlowToPlayWithGrownups(clientServerAddress *string, clientImei *string, numReadings *uint) {
+	baseClient(clientServerAddress, clientImei, time.Second, 2*time.Second, numReadings)
 }
 
-func baseClient(clientServerAddress *string, clientImei *string, readingRate time.Duration, sleepBeforeLogin time.Duration) {
+func baseClient(clientServerAddress *string, clientImei *string, readingRate time.Duration, sleepBeforeLogin time.Duration, numReadings *uint) {
 	//TODO  detect and log desconections
 	log.Printf("Connecting to %s", *clientServerAddress)
 	conn, err := net.Dial("tcp", *clientServerAddress)
@@ -47,9 +47,7 @@ func baseClient(clientServerAddress *string, clientImei *string, readingRate tim
 		log.Fatalf("Error trying to send IMEI %v", err)
 	}
 
-	//TODO add a flag for amount of random reading messages
-	totalReadings := 5
-	for i := 0; i < totalReadings; i++ {
+	for i := uint(0); i < *numReadings || *numReadings == 0; i++ {
 		randomReading := CreateRandReading()
 		log.Printf("DEBUG: [%d] sending reading %v to server", i, randomReading)
 		n, err := conn.Write(randomReading[:])

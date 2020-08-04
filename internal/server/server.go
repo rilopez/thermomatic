@@ -10,8 +10,8 @@ import (
 	"github.com/spin-org/thermomatic/internal/client"
 )
 
-// Start creates a connection listener to accept connections at `port`
-func Start(port uint) {
+// Start creates a tcp connection listener to accept connections at `port`
+func Start(port uint, httpPort uint) {
 	address := fmt.Sprintf(":%d", port)
 	ln, err := net.Listen("tcp", address)
 	log.Printf("Server started, using %s as address", address)
@@ -20,8 +20,9 @@ func Start(port uint) {
 	}
 
 	core := newCore()
-
-	go core.Run()
+	httpd := newHttpd(core, httpPort)
+	go core.run()
+	go httpd.run()
 
 	for {
 		conn, err := ln.Accept()

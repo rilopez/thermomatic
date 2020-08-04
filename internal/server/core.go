@@ -28,7 +28,7 @@ func newCore() *core {
 }
 
 // Run handles channels inbound communications from connected clients
-func (c *core) Run() {
+func (c *core) run() {
 	for {
 		select {
 		case client := <-c.Logins:
