@@ -56,6 +56,17 @@ func (d *httpd) statsHandler(w http.ResponseWriter, req *http.Request) {
 	d.writeJSONResponse(w, *stats)
 }
 
+//TODO create test for imeiFromPath
+func imeiFromPath(path, prefix string) (uint64, error) {
+	imeiStr := strings.TrimPrefix(path, prefix)
+	imei, err := strconv.Atoi(imeiStr)
+	if err != nil {
+		log.Printf("[httpd] %s string can not be parsed as integer, %v", imeiStr, err)
+		return 0, err
+	}
+	return uint64(imei), err
+}
+
 func (d *httpd) readingsHandler(w http.ResponseWriter, req *http.Request) {
 	if req.Method != "GET" {
 		log.Printf("[httpd] %s method not allowed ", req.Method)
@@ -63,15 +74,13 @@ func (d *httpd) readingsHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	imeiStr := strings.TrimPrefix(req.URL.Path, "/readings/")
-	imei, err := strconv.Atoi(imeiStr)
+	imei, err := imeiFromPath(req.URL.Path, "/readings/")
 	if err != nil {
-		log.Printf("[httpd] %s string can not be parsed as integer, %v", imeiStr, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	client, exists := d.core.clients[uint64(imei)]
+	client, exists := d.core.clients[imei]
 	if !exists {
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -84,9 +93,28 @@ func (d *httpd) readingsHandler(w http.ResponseWriter, req *http.Request) {
 	d.writeJSONResponse(w, *reading)
 }
 
+func (d *httpd) statusHandler(w http.ResponseWriter, req *http.Request) {
+	if req.Method != "GET" {
+		log.Printf("[httpd] %s method not allowed ", req.Method)
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	imei, err := imeiFromPath(req.URL.Path, "/status/")
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	_, exists := d.core.clients[imei]
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(fmt.Sprintf("{\"online\":%v}", exists)))
+}
+
 func (d *httpd) run() {
 	http.HandleFunc("/stats", d.statsHandler)
 	http.HandleFunc("/readings/", d.readingsHandler)
+	http.HandleFunc("/status/", d.statusHandler)
 	httpAddress := fmt.Sprintf(":%d", d.port)
 	http.ListenAndServe(httpAddress, d.logRequest(http.DefaultServeMux))
 	log.Printf("[httpd] started at %s", httpAddress)
