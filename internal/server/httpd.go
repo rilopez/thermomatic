@@ -6,6 +6,10 @@ import (
 	"log"
 	"net/http"
 	"runtime"
+	"strconv"
+	"strings"
+
+	"github.com/spin-org/thermomatic/internal/client"
 )
 
 type httpd struct {
@@ -20,6 +24,11 @@ type stats struct {
 	//TODO add bytes per second
 }
 
+type timeStampedReading struct {
+	TimestampEpoch int64           `json:"timestampEpoch"`
+	Reading        *client.Reading `json:"reading"`
+}
+
 func newHttpd(core *core, port uint) *httpd {
 	return &httpd{
 		core: core,
@@ -30,7 +39,9 @@ func newHttpd(core *core, port uint) *httpd {
 //TODO add test for statsHandler
 func (d *httpd) statsHandler(w http.ResponseWriter, req *http.Request) {
 	if req.Method != "GET" {
+		log.Printf("[httpd] %s method not allowed ", req.Method)
 		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
 	}
 
 	stats := &stats{
@@ -45,6 +56,42 @@ func (d *httpd) statsHandler(w http.ResponseWriter, req *http.Request) {
 	d.writeJSONResponse(w, *stats)
 }
 
+func (d *httpd) readingsHandler(w http.ResponseWriter, req *http.Request) {
+	if req.Method != "GET" {
+		log.Printf("[httpd] %s method not allowed ", req.Method)
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	imeiStr := strings.TrimPrefix(req.URL.Path, "/readings/")
+	imei, err := strconv.Atoi(imeiStr)
+	if err != nil {
+		log.Printf("[httpd] %s string can not be parsed as integer, %v", imeiStr, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	client, exists := d.core.clients[uint64(imei)]
+	if !exists {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	reading := &timeStampedReading{
+		TimestampEpoch: client.LastReadingEpoch,
+		Reading:        client.LastReading,
+	}
+	d.writeJSONResponse(w, *reading)
+}
+
+func (d *httpd) run() {
+	http.HandleFunc("/stats", d.statsHandler)
+	http.HandleFunc("/readings/", d.readingsHandler)
+	httpAddress := fmt.Sprintf(":%d", d.port)
+	http.ListenAndServe(httpAddress, d.logRequest(http.DefaultServeMux))
+	log.Printf("[httpd] started at %s", httpAddress)
+}
+
 func (d *httpd) writeJSONResponse(w http.ResponseWriter, v interface{}) {
 	json, err := json.Marshal(v)
 	if err != nil {
@@ -54,13 +101,6 @@ func (d *httpd) writeJSONResponse(w http.ResponseWriter, v interface{}) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(json)
-}
-
-func (d *httpd) run() {
-	http.HandleFunc("/stats", d.statsHandler)
-	httpAddress := fmt.Sprintf(":%d", d.port)
-	http.ListenAndServe(httpAddress, d.logRequest(http.DefaultServeMux))
-	log.Printf("[httpd] started at %s", httpAddress)
 }
 
 func (d *httpd) logRequest(handler http.Handler) http.Handler {
