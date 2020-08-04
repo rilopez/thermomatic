@@ -8,8 +8,23 @@ import (
 	"github.com/spin-org/thermomatic/internal/common"
 )
 
-// Randomatic Implements a simple TCP client that sends `n` random readings after login
+// Randomatic implements a simple TCP client that sends `n` random readings after login
 func Randomatic(clientServerAddress *string, clientImei *string) {
+	baseClient(clientServerAddress, clientImei, 25*time.Millisecond, time.Nanosecond)
+}
+
+// Slowmatic implements a client that will be send be disconected by the server  because it takes more than 2 seconds between msgs
+func Slowmatic(clientServerAddress *string, clientImei *string) {
+	baseClient(clientServerAddress, clientImei, 3*time.Second, time.Nanosecond)
+}
+
+// TooSlowToPlayWithGrownups implements a client that is too slow to send the initial login message, so the server will disconnect the connection
+func TooSlowToPlayWithGrownups(clientServerAddress *string, clientImei *string) {
+	baseClient(clientServerAddress, clientImei, time.Second, 2*time.Second)
+}
+
+func baseClient(clientServerAddress *string, clientImei *string, readingRate time.Duration, sleepBeforeLogin time.Duration) {
+	//TODO  detect and log desconections
 	log.Printf("Connecting to %s", *clientServerAddress)
 	conn, err := net.Dial("tcp", *clientServerAddress)
 	defer func() {
@@ -25,6 +40,7 @@ func Randomatic(clientServerAddress *string, clientImei *string) {
 		log.Fatal(err)
 	}
 	log.Printf("DEBUG: sending login imei %v to server", imeiBytes)
+	time.Sleep(sleepBeforeLogin)
 	n, err := conn.Write(imeiBytes[:])
 	log.Printf("DEBUG: %d bytes sent", n)
 	if err != nil {
@@ -41,7 +57,7 @@ func Randomatic(clientServerAddress *string, clientImei *string) {
 		if err != nil {
 			log.Fatalf("Error trying to send reading %v", err)
 		}
-		time.Sleep(25 * time.Millisecond)
+		time.Sleep(readingRate)
 	}
 	//TODO add a flag to reading frequency , default 25ms
 	//TODO nice to have read from std in csv file of readings

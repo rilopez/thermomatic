@@ -30,13 +30,14 @@ func initLog(fileName string) error {
 	return err
 }
 
-func initCommandLineInterface(handleServerCmd func(uint), handleClientCmd func(clientServerAddress *string, clientImei *string)) {
+func initCommandLineInterface(handleServerCmd func(uint), handleClientCmd func(clientServerAddress *string, clientImei *string, clientType *string)) {
 	serverCmd := flag.NewFlagSet("server", flag.ExitOnError)
 	serverPort := serverCmd.Uint("port", defaultPort, "port")
 
 	clientCmd := flag.NewFlagSet("client", flag.ExitOnError)
 	clientServerAddress := clientCmd.String("server-address", "", "server-address should have this format  host:port")
 	clientImei := clientCmd.String("imei", "", "imei")
+	clientType := clientCmd.String("type", "random", "type")
 
 	if len(os.Args) < 2 {
 		fmt.Println("server or client subcommand is required")
@@ -56,7 +57,7 @@ func initCommandLineInterface(handleServerCmd func(uint), handleClientCmd func(c
 		if *clientImei == "" {
 			panic("-imei is required")
 		}
-		handleClientCmd(clientServerAddress, clientImei)
+		handleClientCmd(clientServerAddress, clientImei, clientType)
 
 	default:
 		flag.PrintDefaults()
@@ -69,8 +70,17 @@ func serverCommandHandler(port uint) {
 	server.Start(port)
 }
 
-func clientCommandHandler(clientServerAddress *string, clientImei *string) {
+func clientCommandHandler(clientServerAddress *string, clientImei *string, clientType *string) {
 	_ = initLog("client.log")
+	switch *clientType {
+	case "random":
+		client.Randomatic(clientServerAddress, clientImei)
+	case "slow":
+		client.Slowmatic(clientServerAddress, clientImei)
+	case "too-slow":
+		client.TooSlowToPlayWithGrownups(clientServerAddress, clientImei)
+	default:
+		panic(fmt.Sprintf("unknown clientType %s", *clientType))
+	}
 
-	client.Randomatic(clientServerAddress, clientImei)
 }

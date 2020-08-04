@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"time"
 
 	"github.com/spin-org/thermomatic/internal/imei"
 
@@ -85,7 +86,7 @@ func (c *Client) receiveReadings() error {
 			Body:   payload[:],
 		}
 
-		//TODO Drops client connections which fail to send at least a _Reading_ every _2 seconds_. #5
+		c.Conn.SetReadDeadline(time.Now().Add(time.Second * 2))
 	}
 }
 

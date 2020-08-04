@@ -87,6 +87,7 @@ func isInRange(value, min, max float64) bool {
 	return value >= min && value <= max
 }
 
+// CreateRandReading creates a new random bytes payload for testing
 func CreateRandReading() [40]byte {
 	return NewPayload(
 		randFloat(temperatureMin, temperatureMax),

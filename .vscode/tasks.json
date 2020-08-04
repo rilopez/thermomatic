@@ -43,7 +43,7 @@
             ]
         },
         {
-            "label": "client",
+            "label": "client random",
             "command": "go",
             "args": [
                 "run",
@@ -57,7 +57,42 @@
             "problemMatcher": [
                 "$go"
             ]
+        },
+        {
+            "label": "client slow",
+            "command": "go",
+            "args": [
+                "run",
+                "./main.go",
+                "client",
+                "-server-address=localhost:1337" ,
+                "-imei=490154203237518",
+                "-type=slow",
+            ],
+            "group": "build",
+            "type": "shell",
+            "problemMatcher": [
+                "$go"
+            ]
+        },
+        {
+            "label": "client too slow",
+            "command": "go",
+            "args": [
+                "run",
+                "./main.go",
+                "client",
+                "-server-address=localhost:1337" ,
+                "-imei=490154203237518",
+                "-type=too-slow",
+            ],
+            "group": "build",
+            "type": "shell",
+            "problemMatcher": [
+                "$go"
+            ]
         }
+
 
     ]
 }
