@@ -3,10 +3,8 @@
 package common
 
 import (
-	"encoding/binary"
 	"errors"
 	"fmt"
-	"math"
 	"strconv"
 	"testing"
 )
@@ -15,16 +13,7 @@ import (
 // denote implementations to be done by the candidate.
 var ErrNotImplemented = errors.New("not implemented")
 
-func CreatePayload(expectedTemperature float64, expectedAltitude float64, expectedLatitude float64, expectedLongitude float64, expectedBatteryLevel float64) [40]byte {
-	var payload [40]byte
-	binary.BigEndian.PutUint64(payload[0:], math.Float64bits(expectedTemperature))
-	binary.BigEndian.PutUint64(payload[8:], math.Float64bits(expectedAltitude))
-	binary.BigEndian.PutUint64(payload[16:], math.Float64bits(expectedLatitude))
-	binary.BigEndian.PutUint64(payload[24:], math.Float64bits(expectedLongitude))
-	binary.BigEndian.PutUint64(payload[32:], math.Float64bits(expectedBatteryLevel))
-	return payload
-}
-
+// ImeiStringToBytes converts an IMEI string to bytes array. This is not only a character to bytes convertion, it parses each char as number
 func ImeiStringToBytes(imei *string) ([15]byte, error) {
 	var buf [15]byte
 
@@ -37,13 +26,13 @@ func ImeiStringToBytes(imei *string) ([15]byte, error) {
 		if err == nil {
 			buf[i] = byte(digit)
 		} else {
-			return buf, errors.New(fmt.Sprintf("IMEI has an invalid digit character at %d", i))
+			return buf, fmt.Errorf("IMEI has an invalid digit character at %d", i)
 		}
 	}
 	return buf, nil
 }
 
-//TODO move to testing utility module
+// ShouldPanic assert that `f` panics during execution
 func ShouldPanic(t *testing.T, f func()) {
 	defer func() { recover() }()
 	f()

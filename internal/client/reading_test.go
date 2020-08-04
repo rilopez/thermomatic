@@ -14,7 +14,7 @@ func TestDecode(t *testing.T) {
 	expectedLongitude := float64(-89.5969049)
 	expectedBatteryLevel := float64(45)
 
-	payload := common.CreatePayload(
+	payload := NewPayload(
 		expectedTemperature,
 		expectedAltitude,
 		expectedLatitude,
@@ -60,7 +60,7 @@ func TestDecodeAllocations(t *testing.T) {
 	defer runtime.GOMAXPROCS(runtime.GOMAXPROCS(1))
 	var start, end runtime.MemStats
 	reading := Reading{}
-	payload := common.CreatePayload(30, 5, 21, -89, 99)
+	payload := NewPayload(30, 5, 21, -89, 99)
 	runtime.GC()
 	runtime.ReadMemStats(&start)
 
