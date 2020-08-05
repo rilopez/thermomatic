@@ -26,19 +26,21 @@ func initLog(fileName string) error {
 	return err
 }
 
-type serverHandler func(uint, uint)
-type clientHandler func(clientServerAddress *string, clientImei *string, clientType *string, numReadings *uint)
+type serverHandler func(port uint, httpPort uint, serverMaxClients uint)
+type clientHandler func(clientServerAddress *string, clientImei *string, clientType *string, numReadings *uint, readingRateInMilliSeconds *uint)
 
 func initCommandLineInterface(handleServerCmd serverHandler, handleClientCmd clientHandler) {
 	serverCmd := flag.NewFlagSet("server", flag.ExitOnError)
-	serverPort := serverCmd.Uint("port", 1337, "port")
-	serverHTTPPort := serverCmd.Uint("httport", 80, "port")
+	serverPort := serverCmd.Uint("port", 1337, "port number to listen for TCP connections of clients implementing the  thermomatic protocol")
+	serverHTTPPort := serverCmd.Uint("http-port", 80, "port number to listen for HTTP connections used mainly for healthchecks")
+	serverMaxClients := serverCmd.Uint("max-clients", 1000, "maximun number of active client connections  using the thermomatic protocol")
 
 	clientCmd := flag.NewFlagSet("client", flag.ExitOnError)
-	clientServerAddress := clientCmd.String("server-address", "localhost:1337", "server-address should have this format  host:port")
-	clientImei := clientCmd.String("imei", "", "imei")
-	clientType := clientCmd.String("type", "random", "type")
-	clientNumReadings := clientCmd.Uint("readings", 5, "readings,  if equals 0 creates an infite readings loop")
+	clientServerAddress := clientCmd.String("server-address", "localhost:1337", "Address (host:port) of the Thermomatic server")
+	clientImei := clientCmd.String("imei", "", "device IMEI number")
+	clientType := clientCmd.String("type", "random", "Automated simulated client type, it could be random, slow, too slow ")
+	clientNumReadings := clientCmd.Uint("readings", 5, "Number of automatic readings the automated client will send,  if equals 0  it sends an infite number of readings")
+	clientReadingRate := clientCmd.Uint("reading-rate", 25, "Number of milliseconds between each reading ")
 
 	if len(os.Args) < 2 {
 		fmt.Println("server or client subcommand is required")
@@ -47,8 +49,12 @@ func initCommandLineInterface(handleServerCmd serverHandler, handleClientCmd cli
 
 	switch os.Args[1] {
 	case "server":
-		serverCmd.Parse(os.Args[2:])
-		handleServerCmd(*serverPort, *serverHTTPPort)
+		err := serverCmd.Parse(os.Args[2:])
+		if err != nil {
+
+			serverCmd.Usage()
+		}
+		handleServerCmd(*serverPort, *serverHTTPPort, *serverMaxClients)
 	case "client":
 		clientCmd.Parse(os.Args[2:])
 		if *clientServerAddress == "" {
@@ -58,7 +64,11 @@ func initCommandLineInterface(handleServerCmd serverHandler, handleClientCmd cli
 		if *clientImei == "" {
 			panic("-imei is required")
 		}
-		handleClientCmd(clientServerAddress, clientImei, clientType, clientNumReadings)
+
+		if *clientType == "" {
+			panic("-type is required, it could be random, slow or too-slow")
+		}
+		handleClientCmd(clientServerAddress, clientImei, clientType, clientNumReadings, clientReadingRate)
 
 	default:
 		flag.PrintDefaults()
@@ -66,16 +76,16 @@ func initCommandLineInterface(handleServerCmd serverHandler, handleClientCmd cli
 	}
 }
 
-func serverCommandHandler(port uint, httpPort uint) {
+func serverCommandHandler(port uint, httpPort uint, serverMaxClients uint) {
 	_ = initLog("server.log")
-	server.Start(port, httpPort)
+	server.Start(port, httpPort, serverMaxClients)
 }
 
-func clientCommandHandler(clientServerAddress *string, clientImei *string, clientType *string, numReadings *uint) {
+func clientCommandHandler(clientServerAddress *string, clientImei *string, clientType *string, numReadings *uint, readingRateInMilliSeconds *uint) {
 	_ = initLog("client.log")
 	switch *clientType {
 	case "random":
-		client.Randomatic(clientServerAddress, clientImei, numReadings)
+		client.Randomatic(clientServerAddress, clientImei, numReadings, readingRateInMilliSeconds)
 	case "slow":
 		client.Slowmatic(clientServerAddress, clientImei, numReadings)
 	case "too-slow":

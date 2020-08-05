@@ -9,8 +9,8 @@ import (
 )
 
 // Randomatic implements a simple TCP client that sends `n` random readings after login
-func Randomatic(clientServerAddress *string, clientImei *string, numReadings *uint) {
-	baseClient(clientServerAddress, clientImei, 25*time.Millisecond, time.Nanosecond, numReadings)
+func Randomatic(clientServerAddress *string, clientImei *string, numReadings *uint, readingRate *uint) {
+	baseClient(clientServerAddress, clientImei, time.Duration(*readingRate)*time.Millisecond, time.Nanosecond, numReadings)
 }
 
 // Slowmatic implements a client that will be send be disconected by the server  because it takes more than 2 seconds between msgs
