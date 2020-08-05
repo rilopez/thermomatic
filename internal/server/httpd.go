@@ -38,7 +38,7 @@ func newHttpd(core *core, port uint) *httpd {
 
 //TODO add test for statsHandler
 func (d *httpd) statsHandler(w http.ResponseWriter, req *http.Request) {
-	if req.Method != "GET" {
+	if req.Method != http.MethodGet {
 		log.Printf("[httpd] %s method not allowed ", req.Method)
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
@@ -68,7 +68,7 @@ func imeiFromPath(path, prefix string) (uint64, error) {
 }
 
 func (d *httpd) readingsHandler(w http.ResponseWriter, req *http.Request) {
-	if req.Method != "GET" {
+	if req.Method != http.MethodGet {
 		log.Printf("[httpd] %s method not allowed ", req.Method)
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
@@ -94,7 +94,7 @@ func (d *httpd) readingsHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 func (d *httpd) statusHandler(w http.ResponseWriter, req *http.Request) {
-	if req.Method != "GET" {
+	if req.Method != http.MethodGet {
 		log.Printf("[httpd] %s method not allowed ", req.Method)
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return

@@ -46,41 +46,37 @@ const (
 func (r *Reading) Decode(b []byte) (ok bool) {
 	_ = b[39] // compiler bound check hint
 	temperature := math.Float64frombits(binary.BigEndian.Uint64(b[0:]))
-
-	if isInRange(temperature, temperatureMin, temperatureMax) {
-		r.Temperature = temperature
-	} else {
-		ok = false
-	}
-
 	altitude := math.Float64frombits(binary.BigEndian.Uint64(b[8:]))
-	if isInRange(altitude, altitudeMin, altitudMax) {
-		r.Altitude = altitude
-	} else {
-		ok = false
-	}
-
 	latitude := math.Float64frombits(binary.BigEndian.Uint64(b[16:]))
-	if isInRange(latitude, latitudeMin, latitudeMax) {
-		r.Latitude = latitude
-	} else {
-		ok = false
-	}
 	longitude := math.Float64frombits(binary.BigEndian.Uint64(b[24:]))
-	if isInRange(longitude, longitudeMin, longitudeMax) {
-		r.Longitude = longitude
-	} else {
-		ok = false
-	}
-
 	batteryLevel := math.Float64frombits(binary.BigEndian.Uint64(b[32:]))
-	if isInRange(batteryLevel, batteryLevelMin, batteryLevelMax) {
-		r.BatteryLevel = batteryLevel
-	} else {
-		ok = false
+
+	if !allFieldsAreValid(temperature, altitude, latitude, longitude, batteryLevel) {
+		return false
 	}
 
-	return ok
+	r.Temperature = temperature
+	r.Altitude = altitude
+	r.Latitude = latitude
+	r.Longitude = longitude
+	r.BatteryLevel = batteryLevel
+
+	return true
+}
+
+func allFieldsAreValid(temperature, altitude, latitude, longitude, batteryLevel float64) bool {
+	validTemperature := isInRange(temperature, temperatureMin, temperatureMax)
+	validAltitude := isInRange(altitude, altitudeMin, altitudMax)
+	validLatitude := isInRange(latitude, latitudeMin, latitudeMax)
+	validLongitud := isInRange(longitude, longitudeMin, longitudeMax)
+	validBatteryLevel := isInRange(batteryLevel, batteryLevelMin, batteryLevelMax)
+
+	return validTemperature &&
+		validAltitude &&
+		validLatitude &&
+		validLongitud &&
+		validBatteryLevel
+
 }
 
 func isInRange(value, min, max float64) bool {
