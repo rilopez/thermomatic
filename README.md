@@ -69,7 +69,7 @@ Given a `Reading` message originating from the device with IMEI code `4901542032
 the corresponding logging record, were it a Go string, would be:
 
 ```go
-record = "1257894000000000000,490154203237518,67.77,2.63555,33.41,44.4,0.2566\n"
+record = "1257894000000000000,490154203237518,67.770000,2.635550,33.410000,44.400000,0.256660\n"
 ```
 
 ## Things we expect to see
