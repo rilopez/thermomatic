@@ -11,19 +11,12 @@ import (
 )
 
 func main() {
+	//Logging messages are written to os.Stderr.
+	log.SetOutput(os.Stderr)
 	initCommandLineInterface(
 		serverCommandHandler,
 		clientCommandHandler,
 	)
-}
-
-func initLog(fileName string) error {
-	logFile, err := os.OpenFile(fileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.SetOutput(logFile)
-	return err
 }
 
 type serverHandler func(port uint, httpPort uint, serverMaxClients uint)
@@ -77,12 +70,12 @@ func initCommandLineInterface(handleServerCmd serverHandler, handleClientCmd cli
 }
 
 func serverCommandHandler(port uint, httpPort uint, serverMaxClients uint) {
-	_ = initLog("server.log")
+
 	server.Start(port, httpPort, serverMaxClients)
 }
 
 func clientCommandHandler(clientServerAddress *string, clientImei *string, clientType *string, numReadings *uint, readingRateInMilliSeconds *uint) {
-	_ = initLog("client.log")
+
 	switch *clientType {
 	case "random":
 		client.Randomatic(clientServerAddress, clientImei, numReadings, readingRateInMilliSeconds)

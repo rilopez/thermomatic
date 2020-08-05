@@ -7,3 +7,5 @@ server.log
 client.log
 main
 thermomatic
+client-output.txt
+server-output.txt

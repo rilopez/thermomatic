@@ -59,7 +59,6 @@ func (c *core) handleReading(imei uint64, payload []byte) {
 
 func (c *core) register(device *client.Client) {
 	if _, exists := c.clients[device.IMEI]; exists {
-		//TODO strategy for what should happen when a device attempts to login twice #11
 		log.Printf("ERR imei %d already logged in", device.IMEI)
 		device.Conn.Close()
 	} else {
@@ -70,6 +69,7 @@ func (c *core) register(device *client.Client) {
 
 func (c *core) deregister(device *client.Client) {
 	if _, exists := c.clients[device.IMEI]; exists {
+		log.Printf("device with IMEI %d desconnected succesfuly", device.IMEI)
 		delete(c.clients, device.IMEI)
 	}
 }

@@ -15,6 +15,6 @@
 #                port number to listen for TCP connections of clients implementing the  thermomatic protocol (default 1337)# 
 set -euo pipefail
 
-go run main.go server "$@"
+go run main.go server "$@"  > server-output.txt 2>server.log
 
 

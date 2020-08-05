@@ -23,6 +23,6 @@
 #         304412928289834
 set -euo pipefail
 
-go run main.go client "$@"
+go run main.go client "$@" > client-output.txt 2>client.log
 
 
