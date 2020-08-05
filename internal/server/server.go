@@ -18,7 +18,7 @@ func Start(port uint, httpPort uint, serverMaxClients uint) {
 		log.Fatalf("%v", err)
 	}
 
-	core := newCore()
+	core := newCore(time.Now)
 	httpd := newHttpd(core, httpPort)
 	go core.run()
 	go httpd.run()

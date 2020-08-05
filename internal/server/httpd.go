@@ -36,7 +36,6 @@ func newHttpd(core *core, port uint) *httpd {
 	}
 }
 
-//TODO add test for statsHandler
 func (d *httpd) statsHandler(w http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodGet {
 		log.Printf("[httpd] %s method not allowed ", req.Method)
@@ -56,7 +55,6 @@ func (d *httpd) statsHandler(w http.ResponseWriter, req *http.Request) {
 	d.writeJSONResponse(w, *stats)
 }
 
-//TODO create test for imeiFromPath
 func imeiFromPath(path, prefix string) (uint64, error) {
 	imeiStr := strings.TrimPrefix(path, prefix)
 	imei, err := strconv.Atoi(imeiStr)

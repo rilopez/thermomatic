@@ -74,13 +74,13 @@ func TestDecodeAllocations(t *testing.T) {
 }
 
 func BenchmarkDecode(b *testing.B) {
-	randomReading := CreateRandReading()
+	randomReading := CreateRandReadingBytes()
 	reading := Reading{}
 	b.ReportAllocs()
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		if ok := reading.Decode(randomReading[:]); ok {
+		if ok := reading.Decode(randomReading[:]); !ok {
 			b.Fail()
 		}
 	}

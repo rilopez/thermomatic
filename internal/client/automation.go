@@ -48,7 +48,7 @@ func baseClient(clientServerAddress *string, clientImei *string, readingRate tim
 	}
 
 	for i := uint(0); i < *numReadings || *numReadings == 0; i++ {
-		randomReading := CreateRandReading()
+		randomReading := CreateRandReadingBytes()
 		log.Printf("DEBUG: [%d] sending reading %v to server", i, randomReading)
 		n, err := conn.Write(randomReading[:])
 		log.Printf("DEBUG: [%d] %d bytes sent", i, n)
