@@ -78,7 +78,7 @@ func TestRead(t *testing.T) {
 		}
 	case loggedOutClient := <-logout:
 		if loggedOutClient != device {
-			t.Errorf("expecterd client device %v was not sent to login channel  got %v", *device, *loggedOutClient)
+			t.Errorf("expected client device %v was not sent to login channel  got %v", *device, *loggedOutClient)
 		}
 	case clientToLogin := <-login:
 		if clientToLogin != device {

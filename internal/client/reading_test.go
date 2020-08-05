@@ -80,7 +80,7 @@ func BenchmarkDecode(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		if ok := reading.Decode(randomReading[:]); ok {
+		if ok := reading.Decode(randomReading[:]); !ok {
 			b.Fail()
 		}
 	}
