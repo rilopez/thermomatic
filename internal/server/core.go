@@ -57,18 +57,18 @@ func (c *core) handleReading(imei uint64, payload []byte) (err error) {
 			err = fmt.Errorf("ERR recovering from hadleReading panic %v", r)
 		}
 	}()
-	if device, exists := c.clients[imei]; exists {
-		reading := &client.Reading{}
-		if reading.Decode(payload) {
-			device.LastReadingEpoch = c.now().UnixNano()
-			device.LastReading = reading
-		} else {
-			return fmt.Errorf("ERR decoding payload from device with IMEI %d", imei)
-		}
-
+	device, exists := c.clients[imei]
+	if !exists {
+		return fmt.Errorf("Client with IMEI %d does not exists", imei)
 	}
-	return fmt.Errorf("Client with IMEI %d does not exists", imei)
+	reading := &client.Reading{}
+	if !reading.Decode(payload) {
+		return fmt.Errorf("ERR decoding payload from device with IMEI %d", imei)
+	}
 
+	device.LastReadingEpoch = c.now().UnixNano()
+	device.LastReading = reading
+	return nil
 }
 
 func (c *core) register(device *client.Client) error {

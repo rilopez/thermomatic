@@ -62,7 +62,7 @@ func TestRead(t *testing.T) {
 
 	expectedIMEIbytes := []byte{4, 9, 0, 1, 5, 4, 2, 0, 3, 2, 3, 7, 5, 1, 8}
 	conn.Write(expectedIMEIbytes)
-	readingBytes := CreateRandReading()
+	readingBytes := CreateRandReadingBytes()
 	conn.Write(readingBytes[:])
 
 	conn.Close()

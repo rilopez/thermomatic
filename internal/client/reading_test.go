@@ -74,7 +74,7 @@ func TestDecodeAllocations(t *testing.T) {
 }
 
 func BenchmarkDecode(b *testing.B) {
-	randomReading := CreateRandReading()
+	randomReading := CreateRandReadingBytes()
 	reading := Reading{}
 	b.ReportAllocs()
 	b.ResetTimer()

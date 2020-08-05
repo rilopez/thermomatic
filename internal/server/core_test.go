@@ -4,34 +4,52 @@ import (
 	"net"
 	"reflect"
 	"testing"
-	"time"
 
 	"github.com/spin-org/thermomatic/internal/client"
+	"github.com/spin-org/thermomatic/internal/common"
 )
 
-func frozenInTime() time.Time {
-	loc, err := time.LoadLocation("EST")
-	if err != nil {
-		panic("Could not load EST location")
-	}
-	//Dragon splashdown historic event time
-	return time.Date(2020, 8, 2, 14, 48, 0, 0, loc)
-}
-
 func TestNewCore(t *testing.T) {
-	core := newCore(frozenInTime)
+	core := newCore(common.FrozenInTime)
 	expectedClientsLen := 0
 	if len(core.clients) != expectedClientsLen {
 		t.Errorf("expected len(core.client) to equal %d but got %d", expectedClientsLen, len(core.clients))
 	}
 }
 
+func BenchmarkCore_HandleReading(b *testing.B) {
+	//Setup
+	expectedPayload := client.CreateRandReadingBytes()
+
+	core := newCore(common.FrozenInTime)
+	expectedClientIMEI := uint64(448324242329542)
+	device := &client.Client{IMEI: expectedClientIMEI}
+	err := core.register(device)
+	if err != nil {
+		b.Error(err)
+	}
+
+	//Exercise
+
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		err := core.handleReading(expectedClientIMEI, expectedPayload[:])
+		if err != nil {
+			b.Fail()
+		}
+	}
+	b.StopTimer()
+
+}
+
 func TestCore_HandleReading(t *testing.T) {
 	//Setup
-	expectedLastReadingEpoch := frozenInTime().UnixNano()
-	expectedPayload := client.CreateRandReading()
+	expectedLastReadingEpoch := common.FrozenInTime().UnixNano()
+	expectedPayload := client.CreateRandReadingBytes()
 
-	core := newCore(frozenInTime)
+	core := newCore(common.FrozenInTime)
 	expectedClientIMEI := uint64(448324242329542)
 	device := &client.Client{IMEI: expectedClientIMEI}
 	core.clients[expectedClientIMEI] = device
@@ -56,7 +74,7 @@ func TestCore_HandleReading(t *testing.T) {
 
 func TestCore_HandleReading_UnknownClient(t *testing.T) {
 	//Setup
-	core := newCore(frozenInTime)
+	core := newCore(common.FrozenInTime)
 
 	//Exercise
 
@@ -69,7 +87,7 @@ func TestCore_HandleReading_UnknownClient(t *testing.T) {
 
 func TestCore_HandleReading_InvalidPayload(t *testing.T) {
 	//Setup
-	core := newCore(frozenInTime)
+	core := newCore(common.FrozenInTime)
 	expectedClientIMEI := uint64(448324242329542)
 	device := &client.Client{IMEI: expectedClientIMEI}
 	core.clients[expectedClientIMEI] = device
@@ -89,7 +107,7 @@ func TestCore_HandleReading_InvalidPayload(t *testing.T) {
 }
 
 func TestCore_Register(t *testing.T) {
-	core := newCore(frozenInTime)
+	core := newCore(common.FrozenInTime)
 	expectedClientIMEI := uint64(448324242329542)
 	device := &client.Client{IMEI: expectedClientIMEI}
 
@@ -106,7 +124,7 @@ func TestCore_Register(t *testing.T) {
 
 func TestCore_Register_ExistingClient(t *testing.T) {
 	// Setup
-	core := newCore(frozenInTime)
+	core := newCore(common.FrozenInTime)
 	expectedClientIMEI := uint64(448324242329542)
 	device := &client.Client{
 		IMEI: expectedClientIMEI,
@@ -124,7 +142,7 @@ func TestCore_Register_ExistingClient(t *testing.T) {
 
 func TestCore_Deregister_ExistingClient(t *testing.T) {
 	// Setup
-	core := newCore(frozenInTime)
+	core := newCore(common.FrozenInTime)
 	expectedClientIMEI := uint64(448324242329542)
 	device := &client.Client{
 		IMEI: expectedClientIMEI,
@@ -141,7 +159,7 @@ func TestCore_Deregister_ExistingClient(t *testing.T) {
 
 func TestCore_Deregister_UnknownClient(t *testing.T) {
 	// Setup
-	core := newCore(frozenInTime)
+	core := newCore(common.FrozenInTime)
 	expectedClientIMEI := uint64(448324242329542)
 	device := &client.Client{
 		IMEI: expectedClientIMEI,

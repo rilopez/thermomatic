@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	"testing"
 )
 
 // ErrNotImplemented is raised throughout the codebase of the challenge to
@@ -28,11 +27,4 @@ func ImeiStringToBytes(imei *string) ([15]byte, error) {
 		}
 	}
 	return buf, nil
-}
-
-// ShouldPanic assert that `f` panics during execution
-func ShouldPanic(t *testing.T, f func()) {
-	defer func() { recover() }()
-	f()
-	t.Errorf("should have panicked")
 }
