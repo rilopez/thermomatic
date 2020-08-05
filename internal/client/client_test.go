@@ -25,7 +25,7 @@ func TestString(t *testing.T) {
 
 	expectedRecord := "1257894000000000000,490154203237518,67.770000,2.635550,33.410000,44.400000,0.256660"
 	actualRecord := c.String()
-	//TODO follow up email to Rob about field string format requirements
+
 	if expectedRecord != actualRecord {
 		t.Errorf("expected %s got %s", expectedRecord, actualRecord)
 	}

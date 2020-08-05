@@ -172,3 +172,20 @@ func TestCore_Deregister_UnknownClient(t *testing.T) {
 		t.Errorf("An error is expected when trying to deregister an unknown client")
 	}
 }
+
+func ExampleHandleReading() {
+	//Setup
+
+	expectedPayload := client.CreateRandReadingBytes()
+
+	core := newCore(common.FrozenInTime)
+	expectedClientIMEI := uint64(448324242329542)
+	device := &client.Client{IMEI: expectedClientIMEI}
+	core.clients[expectedClientIMEI] = device
+
+	//Exercise
+
+	core.handleReading(expectedClientIMEI, expectedPayload[:])
+
+	// Output: 1596397680000000000,448324242329542,9.127577,12545.598440,-51.432503,-42.963412,31.805817
+}

@@ -47,7 +47,10 @@ func (c *core) run() {
 				err = fmt.Errorf("Unknown Command %d", cmd.ID)
 			}
 		}
-		log.Print(err)
+		if err != nil {
+			log.Printf("ERR %v", err)
+		}
+
 	}
 }
 
@@ -68,6 +71,7 @@ func (c *core) handleReading(imei uint64, payload []byte) (err error) {
 
 	device.LastReadingEpoch = c.now().UnixNano()
 	device.LastReading = reading
+	fmt.Println(device)
 	return nil
 }
 
