@@ -1,4 +1,3 @@
-// Package client provides handlers and channels to process client device connections
 package client
 
 import (

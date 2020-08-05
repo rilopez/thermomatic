@@ -1,4 +1,3 @@
-// Package server provides functions to start a server implementing the thermomatic tcp protocol
 package server
 
 import (
