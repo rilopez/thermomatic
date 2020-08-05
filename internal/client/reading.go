@@ -68,13 +68,13 @@ func allFieldsAreValid(temperature, altitude, latitude, longitude, batteryLevel 
 	validTemperature := isInRange(temperature, temperatureMin, temperatureMax)
 	validAltitude := isInRange(altitude, altitudeMin, altitudMax)
 	validLatitude := isInRange(latitude, latitudeMin, latitudeMax)
-	validLongitud := isInRange(longitude, longitudeMin, longitudeMax)
+	validLongitude := isInRange(longitude, longitudeMin, longitudeMax)
 	validBatteryLevel := isInRange(batteryLevel, batteryLevelMin, batteryLevelMax)
 
 	return validTemperature &&
 		validAltitude &&
 		validLatitude &&
-		validLongitud &&
+		validLongitude &&
 		validBatteryLevel
 
 }
