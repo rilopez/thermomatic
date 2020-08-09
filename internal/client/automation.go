@@ -27,13 +27,13 @@ func baseClient(clientServerAddress *string, clientImei *string, readingRate tim
 	//TODO  detect and log desconections
 	log.Printf("Connecting to %s", *clientServerAddress)
 	conn, err := net.Dial("tcp", *clientServerAddress)
+	if err != nil {
+		log.Fatal(err)
+	}
 	defer func() {
 		conn.Close()
 	}()
 
-	if err != nil {
-		log.Fatal(err)
-	}
 	log.Printf("DEBUG: converting imei %s to bytes", *clientImei)
 	imeiBytes, err := common.ImeiStringToBytes(clientImei)
 	if err != nil {
