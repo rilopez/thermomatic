@@ -74,9 +74,10 @@ func (c *Client) receiveReadings() error {
 
 		n, err := c.Conn.Read(payload[:])
 		if err != nil {
+			// deregister client when we got any error
+			c.logout <- c
 			if err == io.EOF {
-				// deregister client when Connection is closed
-				c.logout <- c
+				// not an actual error, client disconected itself
 				return nil
 			}
 			return err
