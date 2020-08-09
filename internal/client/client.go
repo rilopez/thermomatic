@@ -66,6 +66,12 @@ func (c *Client) receiveReadings() error {
 	//TODO verify if this is better than using make to allocate this
 	var payload [40]byte
 	for {
+		err := c.Conn.SetReadDeadline(time.Now().Add(time.Second * 2))
+		if err != nil {
+			c.logout <- c
+			return err
+		}
+
 		n, err := c.Conn.Read(payload[:])
 		if err != nil {
 			if err == io.EOF {
@@ -85,7 +91,6 @@ func (c *Client) receiveReadings() error {
 			Body:   payload[:],
 		}
 
-		c.Conn.SetReadDeadline(time.Now().Add(time.Second * 2))
 	}
 }
 
