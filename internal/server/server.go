@@ -13,11 +13,11 @@ import (
 func Start(port uint, httpPort uint, serverMaxClients uint) {
 	address := fmt.Sprintf(":%d", port)
 	ln, err := net.Listen("tcp", address)
-	log.Printf("Server started, using %s as address", address)
 	if err != nil {
-		log.Fatalf("%v", err)
+		log.Fatalf("ERR Failed to start tcp listener at %s,  %v", address, err)
 	}
 
+	log.Printf("Server started, using %s as address", address)
 	core := newCore(time.Now)
 	httpd := newHttpd(core, httpPort)
 	go core.run()
@@ -26,7 +26,8 @@ func Start(port uint, httpPort uint, serverMaxClients uint) {
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
-			log.Printf("%v", err)
+			log.Printf("Failed to accept connection: %v", err)
+			continue
 		}
 		numActiveClients := len(core.clients)
 		if uint(numActiveClients) >= serverMaxClients {
