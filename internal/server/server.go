@@ -36,7 +36,10 @@ func Start(port uint, httpPort uint, serverMaxClients uint) {
 		} else {
 			log.Printf("client connection from %v", conn.RemoteAddr())
 			//if the device fail to send the login message within 1 second the server will drop the client connection.
-			conn.SetReadDeadline(time.Now().Add(time.Second))
+			err = conn.SetReadDeadline(time.Now().Add(time.Second))
+			if err != nil {
+				log.Fatalf("ERR trying to set read timeout of 1 sec for the login message %v", err)
+			}
 
 			c := client.NewClient(
 				conn,
