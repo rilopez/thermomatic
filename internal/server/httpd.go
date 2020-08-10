@@ -45,7 +45,7 @@ func (d *httpd) statsHandler(w http.ResponseWriter, req *http.Request) {
 
 	//TODO #20 we need a better way to access this shared var (mutex maybe)
 	stats := &stats{
-		NumConnectedClients: len(d.core.devices),
+		NumConnectedClients: d.core.numConnectedDevices(),
 		NumCPU:              runtime.NumCPU(),
 		NumGoroutine:        runtime.NumGoroutine(),
 	}
@@ -79,16 +79,15 @@ func (d *httpd) readingsHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	//TODO #20 we need a better way to access this shared var (mutex maybe)
-	dev, exists := d.core.devices[imei]
+	lastReadingEpoch, lastReading, exists := d.core.deviceLastReading(imei)
 	if !exists {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 
 	reading := &timeStampedReading{
-		TimestampEpoch: dev.lastReadingEpoch,
-		Reading:        dev.lastReading,
+		TimestampEpoch: lastReadingEpoch,
+		Reading:        lastReading,
 	}
 	d.writeJSONResponse(w, *reading)
 }
@@ -106,8 +105,7 @@ func (d *httpd) statusHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	//TODO #20 we need a better way to access this shared var (mutex maybe)
-	_, exists := d.core.devices[imei]
+	_, exists := d.core.deviceByIMEI(imei)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(fmt.Sprintf("{\"online\":%v}", exists)))
 }
