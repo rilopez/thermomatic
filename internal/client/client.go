@@ -66,11 +66,18 @@ func (c *Client) receiveReadings() error {
 	//TODO verify if this is better than using make to allocate this
 	var payload [40]byte
 	for {
+		err := c.Conn.SetReadDeadline(time.Now().Add(time.Second * 2))
+		if err != nil {
+			c.logout <- c
+			return err
+		}
+
 		n, err := c.Conn.Read(payload[:])
 		if err != nil {
+			// deregister client when we got any error
+			c.logout <- c
 			if err == io.EOF {
-				// deregister client when Connection is closed
-				c.logout <- c
+				// not an actual error, client disconected itself
 				return nil
 			}
 			return err
@@ -85,7 +92,6 @@ func (c *Client) receiveReadings() error {
 			Body:   payload[:],
 		}
 
-		c.Conn.SetReadDeadline(time.Now().Add(time.Second * 2))
 	}
 }
 
