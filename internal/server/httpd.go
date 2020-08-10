@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/spin-org/thermomatic/internal/client"
+	"github.com/spin-org/thermomatic/internal/device"
 )
 
 type httpd struct {
@@ -26,7 +26,7 @@ type stats struct {
 
 type timeStampedReading struct {
 	TimestampEpoch int64           `json:"timestampEpoch"`
-	Reading        *client.Reading `json:"reading"`
+	Reading        *device.Reading `json:"reading"`
 }
 
 func newHttpd(core *core, port uint) *httpd {
@@ -43,8 +43,9 @@ func (d *httpd) statsHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	//TODO #20 we need a better way to access this shared var (mutex maybe)
 	stats := &stats{
-		NumConnectedClients: len(d.core.clients),
+		NumConnectedClients: len(d.core.devices),
 		NumCPU:              runtime.NumCPU(),
 		NumGoroutine:        runtime.NumGoroutine(),
 	}
@@ -78,15 +79,16 @@ func (d *httpd) readingsHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	client, exists := d.core.clients[imei]
+	//TODO #20 we need a better way to access this shared var (mutex maybe)
+	dev, exists := d.core.devices[imei]
 	if !exists {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 
 	reading := &timeStampedReading{
-		TimestampEpoch: client.LastReadingEpoch,
-		Reading:        client.LastReading,
+		TimestampEpoch: dev.lastReadingEpoch,
+		Reading:        dev.lastReading,
 	}
 	d.writeJSONResponse(w, *reading)
 }
@@ -104,7 +106,8 @@ func (d *httpd) statusHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	_, exists := d.core.clients[imei]
+	//TODO #20 we need a better way to access this shared var (mutex maybe)
+	_, exists := d.core.devices[imei]
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(fmt.Sprintf("{\"online\":%v}", exists)))
 }

@@ -7,12 +7,12 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/spin-org/thermomatic/internal/client"
 	"github.com/spin-org/thermomatic/internal/common"
+	"github.com/spin-org/thermomatic/internal/device"
 )
 
 func TestHttpd_StatsHandler(t *testing.T) {
-	core := newCore(common.FrozenInTime)
+	core := newCore(common.FrozenInTime, uint(1337), 2)
 	httpd := newHttpd(core, 80)
 	req, err := http.NewRequest("GET", "/stats", nil)
 	if err != nil {
@@ -39,14 +39,15 @@ func TestHttpd_StatsHandler(t *testing.T) {
 }
 
 func TestHttpd_StatusHandler(t *testing.T) {
-	core := newCore(common.FrozenInTime)
+	core := newCore(common.FrozenInTime, uint(1337), 2)
 	httpd := newHttpd(core, 80)
 	expectedIMEI := uint64(448324242329542)
-
-	device := &client.Client{
-		IMEI: expectedIMEI,
+	callBackChannel := make(chan common.Command, 1)
+	err := core.register(expectedIMEI, callBackChannel)
+	if err != nil {
+		t.Error(err)
 	}
-	core.register(device)
+
 	url := fmt.Sprintf("/status/%d", expectedIMEI)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -71,17 +72,21 @@ func TestHttpd_StatusHandler(t *testing.T) {
 }
 
 func TestHttpd_ReadingHandler(t *testing.T) {
-	core := newCore(common.FrozenInTime)
+	core := newCore(common.FrozenInTime, uint(1337), 2)
 	httpd := newHttpd(core, 80)
 	expectedIMEI := uint64(448324242329542)
-	reading := &client.Reading{}
-	randomReadingBytes := client.CreateRandReadingBytes()
+	reading := &device.Reading{}
+	randomReadingBytes := device.CreateRandReadingBytes()
 	reading.Decode(randomReadingBytes[:])
-	device := &client.Client{
-		IMEI:        expectedIMEI,
-		LastReading: reading,
+
+	callBackChannel := make(chan common.Command, 1)
+	err := core.register(expectedIMEI, callBackChannel)
+	if err != nil {
+		t.Error(err)
 	}
-	core.register(device)
+	dev, _ := core.devices[expectedIMEI]
+	dev.lastReading = reading
+
 	url := fmt.Sprintf("/readings/%d", expectedIMEI)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
