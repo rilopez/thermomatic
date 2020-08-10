@@ -12,8 +12,9 @@ import (
 func TestNewCore(t *testing.T) {
 	core := newCore(common.FrozenInTime, uint(1337), 2)
 	expectedClientsLen := 0
-	if len(core.devices) != expectedClientsLen {
-		t.Errorf("expected len(core.client) to equal %d but got %d", expectedClientsLen, len(core.devices))
+	actualClientsLen := core.numConnectedDevices()
+	if actualClientsLen != expectedClientsLen {
+		t.Errorf("expected len(core.client) to equal %d but got %d", expectedClientsLen, actualClientsLen)
 	}
 }
 
@@ -103,7 +104,7 @@ func TestCore_Register(t *testing.T) {
 		t.Errorf("unexpected error %v", err)
 	}
 
-	_, exists := core.devices[expectedIMEI]
+	_, exists := core.deviceByIMEI(expectedIMEI)
 	if !exists {
 		t.Errorf("clients map should contain an entry for IMEI: %d", expectedIMEI)
 	}
