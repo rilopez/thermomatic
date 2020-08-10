@@ -1,1 +1,11 @@
 /.envrc
+/.idea/modules.xml
+/.idea/thermomatic.iml
+/.idea/vcs.xml
+/.idea/workspace.xml
+server.log
+client.log
+main
+thermomatic
+client-output.txt
+server-output.txt
