@@ -43,7 +43,6 @@ func (d *httpd) statsHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	//TODO #20 we need a better way to access this shared var (mutex maybe)
 	stats := &stats{
 		NumConnectedClients: d.core.numConnectedDevices(),
 		NumCPU:              runtime.NumCPU(),

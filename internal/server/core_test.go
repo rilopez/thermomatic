@@ -170,8 +170,6 @@ func TestCore_Deregister_UnknownClient(t *testing.T) {
 	}
 }
 
-//TODO #22 add test to validate all client connections are closed
-
 func ExampleCore_handleReading() {
 	//Setup
 

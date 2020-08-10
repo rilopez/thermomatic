@@ -24,7 +24,6 @@ func TooSlowToPlayWithGrownups(clientServerAddress *string, clientImei *string, 
 }
 
 func baseClient(clientServerAddress *string, clientImei *string, readingRate time.Duration, sleepBeforeLogin time.Duration, numReadings *uint) {
-	//TODO  detect and log desconections
 	log.Printf("Connecting to %s", *clientServerAddress)
 	conn, err := net.Dial("tcp", *clientServerAddress)
 	if err != nil {
@@ -55,6 +54,5 @@ func baseClient(clientServerAddress *string, clientImei *string, readingRate tim
 		}
 		time.Sleep(readingRate)
 	}
-	//TODO add a flag to reading frequency , default 25ms
-	//TODO nice to have read from std in csv file of readings
+
 }
