@@ -64,7 +64,6 @@ func (c *core) listenConnections(wg *sync.WaitGroup) {
 			continue
 		}
 		log.Print("DEBUG: new client connection")
-		//TODO #20 accesing c.clients in this way is not thread safe, use a mutex
 		numActiveClients := c.numConnectedDevices()
 		if uint(numActiveClients) >= c.serverMaxClients {
 			// Limit the number of active clients to prevent resource exhaustion

@@ -94,10 +94,12 @@ func (c *Client) receiveReadingsLoop() {
 			break
 		}
 
+		payloadCopy := make([]byte, len(payload))
+		copy(payloadCopy, payload[:])
 		c.outbound <- common.Command{
 			ID:     common.READING,
 			Sender: c.imei,
-			Body:   payload[:], //TODO #20 pass a copy instead of a reference
+			Body:   payloadCopy,
 		}
 
 	}
@@ -114,9 +116,10 @@ func (c *Client) nextReading(payload []byte) error {
 	n, err := c.conn.Read(payload[:])
 	if err != nil {
 		return err
-
 	}
 	//TODO is possible to read less bytes , we should use manual buffer or an buf reader
+	// but we have an open review discution about usage of custom reading loop, or do not follow
+	// requirements constraints/hints see https://github.com/rilopez/thermomatic/pull/18#discussion_r466581202
 	if n != 40 {
 		err := fmt.Errorf("WARN read only %d bytes, expected 40 for reading payloads", n)
 		return err
