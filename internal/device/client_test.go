@@ -13,7 +13,7 @@ import (
 func TestRead(t *testing.T) {
 	t.Skip("NEEDS REIMPLEMENTATION")
 	timeout := time.After(1 * time.Second)
-	outbound := make(chan common.Command)
+	outbound := make(chan common.Command, 1)
 	expectedIMEI := uint64(490154203237518)
 
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
