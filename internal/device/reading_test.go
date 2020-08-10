@@ -1,4 +1,4 @@
-package client
+package device
 
 import (
 	"runtime"
@@ -7,7 +7,7 @@ import (
 	"github.com/spin-org/thermomatic/internal/common"
 )
 
-func TestDecode(t *testing.T) {
+func TestReading_Decode(t *testing.T) {
 	expectedTemperature := float64(38)
 	expectedAltitude := float64(10)
 	expectedLatitude := float64(21.033643)
@@ -56,7 +56,7 @@ func TestDecodePanicAtLeast40byteslong(t *testing.T) {
 	})
 }
 
-func TestDecodeAllocations(t *testing.T) {
+func TestReading_Decode_Allocations(t *testing.T) {
 	defer runtime.GOMAXPROCS(runtime.GOMAXPROCS(1))
 	var start, end runtime.MemStats
 	reading := Reading{}
@@ -73,7 +73,7 @@ func TestDecodeAllocations(t *testing.T) {
 	}
 }
 
-func BenchmarkDecode(b *testing.B) {
+func BenchmarkReading_Decode(b *testing.B) {
 	randomReading := CreateRandReadingBytes()
 	reading := Reading{}
 	b.ReportAllocs()

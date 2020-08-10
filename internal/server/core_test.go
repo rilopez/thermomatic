@@ -1,80 +1,68 @@
 package server
 
 import (
-	"net"
+	"fmt"
 	"reflect"
 	"testing"
 
-	"github.com/spin-org/thermomatic/internal/client"
 	"github.com/spin-org/thermomatic/internal/common"
+	"github.com/spin-org/thermomatic/internal/device"
 )
 
 func TestNewCore(t *testing.T) {
-	core := newCore(common.FrozenInTime)
+	core := newCore(common.FrozenInTime, uint(1337), 2)
 	expectedClientsLen := 0
-	if len(core.clients) != expectedClientsLen {
-		t.Errorf("expected len(core.client) to equal %d but got %d", expectedClientsLen, len(core.clients))
+	if len(core.devices) != expectedClientsLen {
+		t.Errorf("expected len(core.client) to equal %d but got %d", expectedClientsLen, len(core.devices))
 	}
 }
 
-func BenchmarkCore_HandleReading(b *testing.B) {
-	//Setup
-	expectedPayload := client.CreateRandReadingBytes()
+func TestOutputReading(t *testing.T) {
+	expectedRecord := "1257894000000000000,490154203237518,67.770000,2.635550,33.410000,44.400000,0.256660"
+	actualRecord := formatReadingOutput(490154203237518, 1257894000000000000, &device.Reading{
+		Temperature:  67.77,
+		Altitude:     2.63555,
+		Latitude:     33.41,
+		Longitude:    44.4,
+		BatteryLevel: 0.25666,
+	})
 
-	core := newCore(common.FrozenInTime)
-	expectedClientIMEI := uint64(448324242329542)
-	device := &client.Client{IMEI: expectedClientIMEI}
-	err := core.register(device)
-	if err != nil {
-		b.Error(err)
+	if expectedRecord != actualRecord {
+		t.Errorf("expected %s got %s", expectedRecord, actualRecord)
 	}
-
-	//Exercise
-
-	b.ReportAllocs()
-	b.ResetTimer()
-
-	for i := 0; i < b.N; i++ {
-		err := core.handleReading(expectedClientIMEI, expectedPayload[:])
-		if err != nil {
-			b.Fail()
-		}
-	}
-	b.StopTimer()
 
 }
 
 func TestCore_HandleReading(t *testing.T) {
 	//Setup
 	expectedLastReadingEpoch := common.FrozenInTime().UnixNano()
-	expectedPayload := client.CreateRandReadingBytes()
+	expectedPayload := device.CreateRandReadingBytes()
 
-	core := newCore(common.FrozenInTime)
+	core := newCore(common.FrozenInTime, uint(1337), 2)
 	expectedClientIMEI := uint64(448324242329542)
-	device := &client.Client{IMEI: expectedClientIMEI}
-	core.clients[expectedClientIMEI] = device
+	dev := &connectedDevice{}
+	core.devices[expectedClientIMEI] = dev
 
 	//Exercise
-
 	core.handleReading(expectedClientIMEI, expectedPayload[:])
 
-	if device.LastReadingEpoch != expectedLastReadingEpoch {
+	if dev.lastReadingEpoch != expectedLastReadingEpoch {
 		t.Errorf("expected LastReadingEpoch to equal %d but got %d",
 			expectedLastReadingEpoch,
-			device.LastReadingEpoch)
+			dev.lastReadingEpoch)
 	}
-	expectedReading := &client.Reading{}
+	expectedReading := &device.Reading{}
 	expectedReading.Decode(expectedPayload[:])
-	if !reflect.DeepEqual(expectedReading, device.LastReading) {
+	if !reflect.DeepEqual(expectedReading, dev.lastReading) {
 		t.Errorf("expected LastReading to equal %v but got %v",
 			expectedReading,
-			device.LastReading)
+			dev.lastReading)
 	}
 }
 
 func TestCore_HandleReading_UnknownClient(t *testing.T) {
 	//Setup
-	core := newCore(common.FrozenInTime)
+	core := newCore(common.FrozenInTime, uint(1337), 2)
 
 	//Exercise
 
@@ -87,10 +75,10 @@ func TestCore_HandleReading_UnknownClient(t *testing.T) {
 
 func TestCore_HandleReading_InvalidPayload(t *testing.T) {
 	//Setup
-	core := newCore(common.FrozenInTime)
+	core := newCore(common.FrozenInTime, uint(1337), 2)
 	expectedClientIMEI := uint64(448324242329542)
-	device := &client.Client{IMEI: expectedClientIMEI}
-	core.clients[expectedClientIMEI] = device
+	dev := &connectedDevice{}
+	core.devices[expectedClientIMEI] = dev
 
 	//Exercise bound check panic
 	errBoundCheckPanic := core.handleReading(expectedClientIMEI, []byte{1, 2})
@@ -98,7 +86,7 @@ func TestCore_HandleReading_InvalidPayload(t *testing.T) {
 		t.Errorf("expected get an error for unknown client %d", expectedClientIMEI)
 	}
 
-	invalidPayload := client.NewPayload(9999999, 9999999, 9999999, 9999999, 9999999)
+	invalidPayload := device.NewPayload(9999999, 9999999, 9999999, 9999999, 9999999)
 
 	errInvalidPayload := core.handleReading(expectedClientIMEI, invalidPayload[:])
 	if errInvalidPayload == nil {
@@ -107,51 +95,62 @@ func TestCore_HandleReading_InvalidPayload(t *testing.T) {
 }
 
 func TestCore_Register(t *testing.T) {
-	core := newCore(common.FrozenInTime)
-	expectedClientIMEI := uint64(448324242329542)
-	device := &client.Client{IMEI: expectedClientIMEI}
-
-	err := core.register(device)
+	core := newCore(common.FrozenInTime, uint(1337), 2)
+	expectedIMEI := uint64(448324242329542)
+	callBackChannel := make(chan common.Command, 1)
+	err := core.register(expectedIMEI, callBackChannel)
 	if err != nil {
 		t.Errorf("unexpected error %v", err)
 	}
 
-	_, exists := core.clients[device.IMEI]
+	_, exists := core.devices[expectedIMEI]
 	if !exists {
-		t.Errorf("clients map should contain an entry for IMEI: %d", expectedClientIMEI)
+		t.Errorf("clients map should contain an entry for IMEI: %d", expectedIMEI)
+	}
+	cmd := <-callBackChannel
+	if cmd.ID != common.WELCOME {
+		t.Errorf("Expected callback channel to receive a WELCOME cmd but got %v", cmd.ID)
 	}
 }
 
 func TestCore_Register_ExistingClient(t *testing.T) {
 	// Setup
-	core := newCore(common.FrozenInTime)
-	expectedClientIMEI := uint64(448324242329542)
-	device := &client.Client{
-		IMEI: expectedClientIMEI,
-		Conn: &net.UnixConn{},
-	}
+	core := newCore(common.FrozenInTime, uint(1337), 2)
+	expectedIMEI := uint64(448324242329542)
+	callBackChannel := make(chan common.Command, 2)
 
 	//Exercise
-	core.register(device)
+	err := core.register(expectedIMEI, callBackChannel)
+	if err != nil {
+		t.Errorf("Unexpected err (%v) while trying to register %d", err, expectedIMEI)
+	}
+	<-callBackChannel //ignore welcome cmd
 
-	err := core.register(device)
+	err = core.register(expectedIMEI, callBackChannel)
 	if err == nil {
 		t.Errorf("An error is expected when trying to register an existing client ")
 	}
+
+	cmd := <-callBackChannel
+	if cmd.ID != common.KILL {
+		t.Error("Expecting a kill command from the back channel ")
+	}
+
 }
 
 func TestCore_Deregister_ExistingClient(t *testing.T) {
 	// Setup
-	core := newCore(common.FrozenInTime)
-	expectedClientIMEI := uint64(448324242329542)
-	device := &client.Client{
-		IMEI: expectedClientIMEI,
-	}
+	core := newCore(common.FrozenInTime, uint(1337), 2)
+	imei := uint64(448324242329542)
+	callBackChannel := make(chan common.Command, 1)
 
 	//Exercise
-	core.register(device)
+	err := core.register(imei, callBackChannel)
+	if err != nil {
+		t.Errorf("Unexpected err (%v)while trying to register %d", err, imei)
+	}
 
-	err := core.deregister(device)
+	err = core.deregister(imei)
 	if err != nil {
 		t.Errorf("Unexpected error trying to deregister an existing client %v ", err)
 	}
@@ -159,33 +158,67 @@ func TestCore_Deregister_ExistingClient(t *testing.T) {
 
 func TestCore_Deregister_UnknownClient(t *testing.T) {
 	// Setup
-	core := newCore(common.FrozenInTime)
+	core := newCore(common.FrozenInTime, uint(1337), 2)
 	expectedClientIMEI := uint64(448324242329542)
-	device := &client.Client{
-		IMEI: expectedClientIMEI,
-	}
 
 	//Exercise
 
-	err := core.deregister(device)
+	err := core.deregister(expectedClientIMEI)
 	if err == nil {
 		t.Errorf("An error is expected when trying to deregister an unknown client")
 	}
 }
 
-func ExampleHandleReading() {
+//TODO #22 add test to validate all client connections are closed
+
+func ExampleCore_handleReading() {
 	//Setup
 
-	expectedPayload := client.CreateRandReadingBytes()
+	expectedPayload := device.NewPayload(9.127577, 12545.598440, -51.432503, -42.963412, 31.805817)
 
-	core := newCore(common.FrozenInTime)
+	core := newCore(common.FrozenInTime, uint(1337), 2)
+	expectedIMEI := uint64(448324242329542)
+	callBackChannel := make(chan common.Command, 1)
+
+	//Exercise
+	err := core.register(expectedIMEI, callBackChannel)
+	if err != nil {
+		fmt.Printf("Unexpected err (%v) while trying to register %d", err, expectedIMEI)
+	}
+	//Exercise
+
+	core.handleReading(expectedIMEI, expectedPayload[:])
+
+	// Output: 1596397680000000000,448324242329542,9.127577,12545.598440,-51.432503,-42.963412,31.805817
+}
+
+func BenchmarkCore_HandleReading(b *testing.B) {
+	//Setup
+	expectedPayload := device.CreateRandReadingBytes()
+
+	core := newCore(common.FrozenInTime, uint(1337), 2)
+
 	expectedClientIMEI := uint64(448324242329542)
-	device := &client.Client{IMEI: expectedClientIMEI}
-	core.clients[expectedClientIMEI] = device
+
+	callBackChannel := make(chan common.Command, 1)
+
+	err := core.register(expectedClientIMEI, callBackChannel)
+	if err != nil {
+		b.Error(err)
+	}
 
 	//Exercise
 
-	core.handleReading(expectedClientIMEI, expectedPayload[:])
+	b.ReportAllocs()
+	b.ResetTimer()
 
-	// Output: 1596397680000000000,448324242329542,9.127577,12545.598440,-51.432503,-42.963412,31.805817
+	for i := 0; i < b.N; i++ {
+		fmt.Printf("reading %d of %d readings", i, b.N)
+		err := core.handleReading(expectedClientIMEI, expectedPayload[:])
+		if err != nil {
+			b.Fail()
+		}
+	}
+	b.StopTimer()
+
 }

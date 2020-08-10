@@ -9,10 +9,10 @@ device.  3 channels are used to communicate the client data to the server core
 	commands chan common.Command
 	    used to send data send by the client to the server core.
 	    currently the server implements only one command (READING)
-	Logouts  chan *client.Client
+	Logouts  chan *device.Client
 		used to send clients with closed or timeout connections. The reciever
 		should remove the record from the connected clients map
-	Logins   chan *client.Client
+	Logins   chan *device.Client
 		after login message is recived and parsed as imei this channel is used
 		to send a newly created(and) client so the receiver can store
 		its reference in the connected clients map

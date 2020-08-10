@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/spin-org/thermomatic/internal/client"
+	"github.com/spin-org/thermomatic/internal/device"
 	"github.com/spin-org/thermomatic/internal/server"
 )
 
@@ -78,11 +78,11 @@ func clientCommandHandler(clientServerAddress *string, clientImei *string, clien
 
 	switch *clientType {
 	case "random":
-		client.Randomatic(clientServerAddress, clientImei, numReadings, readingRateInMilliSeconds)
+		device.Randomatic(clientServerAddress, clientImei, numReadings, readingRateInMilliSeconds)
 	case "slow":
-		client.Slowmatic(clientServerAddress, clientImei, numReadings)
+		device.Slowmatic(clientServerAddress, clientImei, numReadings)
 	case "too-slow":
-		client.TooSlowToPlayWithGrownups(clientServerAddress, clientImei, numReadings)
+		device.TooSlowToPlayWithGrownups(clientServerAddress, clientImei, numReadings)
 	default:
 		panic(fmt.Sprintf("unknown clientType %s", *clientType))
 	}
