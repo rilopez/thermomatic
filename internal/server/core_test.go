@@ -197,9 +197,12 @@ func BenchmarkCore_HandleReading(b *testing.B) {
 	expectedPayload := device.CreateRandReadingBytes()
 
 	core := newCore(common.FrozenInTime, uint(1337), 2)
+
 	expectedClientIMEI := uint64(448324242329542)
 
-	err := core.register(expectedClientIMEI, nil)
+	callBackChannel := make(chan common.Command, 1)
+
+	err := core.register(expectedClientIMEI, callBackChannel)
 	if err != nil {
 		b.Error(err)
 	}
@@ -210,6 +213,7 @@ func BenchmarkCore_HandleReading(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
+		fmt.Printf("reading %d of %d readings", i, b.N)
 		err := core.handleReading(expectedClientIMEI, expectedPayload[:])
 		if err != nil {
 			b.Fail()

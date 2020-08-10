@@ -30,7 +30,7 @@ type connectedDevice struct {
 func newCore(now func() time.Time, port uint, serverMaxClients uint) *core {
 	return &core{
 		devices:          make(map[uint64]*connectedDevice),
-		commands:         make(chan common.Command),
+		commands:         make(chan common.Command, 1),
 		now:              now,
 		port:             port,
 		serverMaxClients: serverMaxClients,
